@@ -1,9 +1,5 @@
 defmodule DayOneExercise do
-  def read_file(filename) do
-    with {:ok, contents} <- File.read(filename) do
-      contents
-    end
-  end
+  import Helpers
 
   def parse_file_into_numbers_list(filename) do
     read_file(filename)
