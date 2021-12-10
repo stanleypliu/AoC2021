@@ -1,6 +1,6 @@
 # Aoc2021
 
-**TODO: Add description**
+Advent of code 2021 in Elixir
 
 ## Installation
 
