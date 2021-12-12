@@ -121,12 +121,6 @@ defmodule DayThreeExercise do
     end
   end
 
-  def transpose_strings(list_of_strings) do
-    list_of_strings
-    |> List.zip()
-    |> Enum.map(&Tuple.to_list/1)
-  end
-
   def parse_file_into_list_of_chars(filename) do
     read_file(filename)
     |> String.split("\n", trim: true)
