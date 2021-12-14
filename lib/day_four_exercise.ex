@@ -42,12 +42,16 @@ defmodule DayFourExercise do
   # Once four in a row/column has been achieved, check the 'rows' and 'columns' of the map to see if a whole row or column will be marked when the next number is drawn.
   # If that happens, stop iterating/drawing numbers.
   # If this is not possible, check every time after a number is marked successfully.
-  def calculate_final_score(filename) do
+  def calculate_score_of_winning_board(filename) do
     bingo_boards = create_bingo_boards(filename)
     draw = draw_numbers(filename)
 
     result = mark_boards(draw, 0, bingo_boards)
 
+    calculate_final_score(result)
+  end
+
+  def calculate_final_score(result) do
     sum_of_all_unmarked_numbers =
       Enum.filter(result.winning_board, fn {_, value} ->
         {_, marked} = value
@@ -59,6 +63,63 @@ defmodule DayFourExercise do
       |> Enum.sum()
 
     sum_of_all_unmarked_numbers * String.to_integer(result.winning_number)
+  end
+
+  def find_last_board_to_win(filename) do
+    bingo_boards = create_bingo_boards(filename)
+    draw = draw_numbers(filename)
+
+    # Two arrays, one containing the bingo boards at the start, and one only containing winning boards. When the length of the starting boards is 0, return last board.
+    # Calculate its final score.
+    result = get_last_winning_board(draw, 0, %{remaining_boards: bingo_boards, winning_boards: []})
+
+    calculate_final_score(result)
+  end
+
+  def get_last_winning_board(draw, index, record_of_boards) do
+    winning_boards = record_of_boards.winning_boards
+    remaining_boards = record_of_boards.remaining_boards
+
+    cond do
+      Enum.count(remaining_boards) == 0 ->
+        %{
+          winning_board: List.last(winning_boards),
+          winning_number: Enum.at(draw, index - 1)
+        }
+
+      Enum.count(remaining_boards) != 0 ->
+        drawn_number = Enum.at(draw, index)
+
+        marked_boards =
+          Enum.reduce(remaining_boards, %{boards_yet_to_win: [], winning_boards: []}, fn bingo_board, acc ->
+            bingo_board_values = Map.to_list(bingo_board)
+
+            found_value =
+              Enum.find(bingo_board_values, nil, fn val ->
+                {_, {number, _}} = val
+                number == drawn_number
+              end)
+
+            if found_value do
+              {coordinates, {_, _}} = found_value
+
+              updated_board =
+                Map.update!(bingo_board, coordinates, fn existing_value ->
+                  {number, _} = existing_value
+                  {number, true}
+                end)
+
+              if check_updated_board_for_win(updated_board) do
+                %{winning_boards: acc.winning_boards ++ List.wrap(updated_board), boards_yet_to_win: acc.boards_yet_to_win}
+              else
+                %{winning_boards: acc.winning_boards, boards_yet_to_win: acc.boards_yet_to_win ++ List.wrap(updated_board)}
+              end
+            else
+              %{winning_boards: acc.winning_boards, boards_yet_to_win: acc.boards_yet_to_win ++ List.wrap(bingo_board)}
+            end
+          end)
+        get_last_winning_board(draw, index + 1, %{remaining_boards: marked_boards.boards_yet_to_win, winning_boards: marked_boards.winning_boards})
+    end
   end
 
   def mark_boards(draw, index, bingo_boards) do
