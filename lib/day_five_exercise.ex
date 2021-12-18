@@ -40,18 +40,42 @@ defmodule DayFiveExercise do
           end
 
         x1 != x2 && y1 != y2 ->
-          vent_line
+          if abs(y1 - y2) == 1 && abs(x1 - x2) == 1 do
+            vent_line
+          else
+            vent_line ++ create_diagonal_line({x1, y1}, {x2, y2})
+          end
 
         x1 == x2 && y1 == y2 ->
-          vent_line
+          []
       end
 
     end)
   end
 
+  def create_diagonal_line(first_point, second_point) do
+    {x1, y1} = first_point
+    {x2, y2} = second_point
+
+    if abs(x1 - x2) != abs(y2 - y1) do
+      []
+    else
+      x_range = Range.new(x1, x2)
+
+      y_range = Range.new(y1, y2)
+
+      Enum.with_index(x_range, fn n, index ->
+        {n, Enum.at(y_range, index)}
+      end)
+      |> Enum.filter(fn coordinates ->
+        coordinates != first_point && coordinates != second_point
+      end)
+    end
+  end
+
   def find_intersections(filename) do
     interpolated_lines = find_interpolated_coordinates(filename)
-    IO.inspect(interpolated_lines)
+
     List.flatten(interpolated_lines)
     |> Enum.frequencies()
     |> Enum.filter(fn {_, v} ->
